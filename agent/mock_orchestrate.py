@@ -1,62 +1,49 @@
-# mock_orchestrate.py
-# This file simulates IBM watsonx Orchestrate behavior for the hackathon
-# So that our agent can "run workflows" without needing IBM access.
+# Orchestrator: Connects InventoryAgent & AnalyticsAgent to process data.
+# Loads inventory, updates stock, generates insights, and simulates BIMSHI logic.
 
-class MockOrchestrate:
+import json
+from .inventory_agent import InventoryAgent
+from .analytics_agent import AnalyticsAgent
+
+
+class Orchestrator:
     """
-    A lightweight mock engine that simulates:
-    - workflow runs
-    - skill calling
-    - task chaining
-    - async triggers
+    Orchestrator for BIMSHI.
+
+    Responsibilities:
+    - Load inventory from data file
+    - Use InventoryAgent to manage stock operations
+    - Use AnalyticsAgent to generate insights
+    - Provide a clean interface for Streamlit or other apps to call
     """
 
-    def __init__(self):
-        self.logs = []
+    def __init__(self, inventory_path="agent/data/inventory.json"):
+        self.inventory_path = inventory_path
+        self.inventory = self.load_inventory()
+        self.inventory_agent = InventoryAgent(self.inventory)
+        self.analytics_agent = AnalyticsAgent(self.inventory)
 
-    def log(self, message):
-        print(f"[MOCK-ORCHESTRATE] {message}")
-        self.logs.append(message)
+    def load_inventory(self):
+        """Loads inventory JSON file."""
+        with open(self.inventory_path, "r") as f:
+            return json.load(f)
 
-    def run_workflow(self, name, **kwargs):
-        """
-        Simulate starting a workflow.
-        """
-        self.log(f"Workflow '{name}' triggered with parameters: {kwargs}")
-        return {
-            "workflow": name,
-            "status": "completed",
-            "result": kwargs
-        }
+    def update_stock(self, item_name, quantity):
+        """Update stock using InventoryAgent."""
+        self.inventory_agent.update_stock(item_name, quantity)
+        self.save_inventory()
 
-    def run_skill(self, skill_name, func, *args, **kwargs):
-        """
-        Simulate calling a digital skill.
-        """
-        self.log(f"Skill '{skill_name}' executed.")
-        result = func(*args, **kwargs)
-        return {
-            "skill": skill_name,
-            "output": result
-        }
+    def save_inventory(self):
+        """Save updated inventory back to JSON."""
+        with open(self.inventory_path, "w") as f:
+            json.dump(self.inventory_agent.inventory, f, indent=4)
 
-    def chain(self, steps):
-        """
-        Simulate a workflow chain.
-        Example:
-        orchestrate.chain([
-            ("load_data", func),
-            ("clean_data", func),
-            ("generate_report", func)
-        ])
-        """
-        results = {}
-        for step_name, func, params in steps:
-            self.log(f"Running workflow step: {step_name}")
-            results[step_name] = func(**params)
-        return results
+    def get_insights(self):
+        """Generate analytics insights."""
+        return self.analytics_agent.generate_insights()
 
+    def get_inventory(self):
+        """Return current inventory."""
+        return self.inventory_agent.inventory
 
-# Global orchestrate engine instance
-orchestrate = MockOrchestrate()
 

@@ -1,50 +1,32 @@
-# AnalyticsAgent: Processes BIMSHI store data to generate insights,
-# demand trends, product performance, and simple restocking predictions.
-class AnalyticsAgent:
-    """
-    Analytics Agent for BIMSHI.
-    Generates insights on sales, stock levels, category performance,
-    and predicts restocking needs using simple heuristic rules.
-    """
-
-    def __init__(self, inventory_data, sales_data):
-        self.inventory_data = inventory_data   # {item: quantity}
-        self.sales_data = sales_data           # {item: units_sold}
-
-    def top_selling_items(self, top_n=5):
-        sorted_items = sorted(self.sales_data.items(), key=lambda x: x[1], reverse=True)
-        return sorted_items[:top_n]
-
-    def low_stock_items(self, threshold=10):
-        return {item: qty for item, qty in self.inventory_data.items() if qty < threshold}
-
-    def demand_prediction(self):
-        """Simple prediction: if sold units > remaining stock → needs restock"""
-        prediction = {}
-        for item, sold in self.sales_data.items():
-            stock = self.inventory_data.get(item, 0)
-            if sold > stock:
-                prediction[item] = "High demand – restock needed soon"
-            elif sold == 0:
-                prediction[item] = "No demand – review item"
-            else:
-                prediction[item] = "Stable"
-        return prediction
-
-    def category_performance(self, category_map):
+    def generate_insights(self):
         """
-        category_map example:
-        { 'Sweaters': ['Men Sweater', 'Women Sweater'], 'Kids': ['Kids Hoodie'] }
+        Generate simple analytics insights for BIMSHI store.
+        Returns a dictionary of key metrics and trends.
         """
-        category_sales = {}
-        for category, items in category_map.items():
-            category_sales[category] = sum(self.sales_data.get(i, 0) for i in items)
-        return category_sales
+        insights = {}
+        total_items = sum(self.inventory.values())
+        insights["Total Items in Store"] = total_items
 
-    def generate_summary(self):
-        return {
-            "top_sellers": self.top_selling_items(),
-            "low_stock": self.low_stock_items(),
-            "demand_prediction": self.demand_prediction(),
-        }
+        # Category-wise totals
+        men_items = sum(qty for item, qty in self.inventory.items() if "Men" in item)
+        women_items = sum(qty for item, qty in self.inventory.items() if "Women" in item)
+        kids_items = sum(qty for item, qty in self.inventory.items() if "Kids" in item)
+
+        insights["Men's Items"] = men_items
+        insights["Women's Items"] = women_items
+        insights["Kids' Items"] = kids_items
+
+        # Fast-selling vs slow-selling (simple threshold)
+        fast_selling = [item for item, qty in self.inventory.items() if qty <= 20]
+        slow_selling = [item for item, qty in self.inventory.items() if qty > 40]
+
+        insights["Fast-Selling Items (<=20 pcs)"] = ", ".join(fast_selling) if fast_selling else "None"
+        insights["Slow-Selling Items (>40 pcs)"] = ", ".join(slow_selling) if slow_selling else "None"
+
+        # Simple restocking recommendation
+        restock_items = [item for item, qty in self.inventory.items() if qty < 15]
+        insights["Restock Recommendation (<15 pcs)"] = ", ".join(restock_items) if restock_items else "None"
+
+        return insights
+
 

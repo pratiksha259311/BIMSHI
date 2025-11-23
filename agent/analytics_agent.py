@@ -1,3 +1,10 @@
+class AnalyticsAgent:
+    """
+    Analytics Agent for BIMSHI.
+    """
+    def __init__(self, inventory):
+        self.inventory = inventory
+
     def generate_insights(self):
         """
         Generate simple analytics insights for BIMSHI store.

@@ -2,8 +2,8 @@
 # Loads inventory, updates stock, generates insights, and simulates BIMSHI logic.
 
 import json
-from .inventory_agent import InventoryAgent
-from .analytics_agent import AnalyticsAgent
+from agent.inventory_agent import InventoryAgent
+from agent.analytics_agent import AnalyticsAgent
 
 
 class Orchestrator:
